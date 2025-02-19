@@ -27,6 +27,10 @@ def html_page_scraping(website_url):
         html_content = page.text
 
         soup = BeautifulSoup(page.text, "html.parser")
+        for tag in soup.find_all(style=True):
+            if "display:;" in tag["style"]:
+                del tag["style"]
+
 
         with open(file_path, "w", encoding="utf-8") as file:
             file.write(soup.prettify())
