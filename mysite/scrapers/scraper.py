@@ -7,14 +7,17 @@ from typing import Optional
 class WebScrapper:
 
     def __init__(self, website_url:str, headers: dict = None, remove_tags=None, remove_styles=None):
+
         self.website_url = website_url
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0'
         }
+
         self.remove_tags = remove_tags or ["script", "style"]
         self.remove_styles = remove_styles
         
     def get_page(self) -> Optional[requests.Response]:
+
         try:
             response = requests.get(self.website_url, headers=self.headers)
             response.raise_for_status
@@ -27,7 +30,9 @@ class WebScrapper:
             return None
     
     def clean_html(self, soup:BeautifulSoup) -> BeautifulSoup:
+
         """Clean up HTML by removing unnecessary tags or styles"""
+
         for tag in soup.find_all(self.remove_tags):
             tag.decompose()
 
@@ -39,8 +44,14 @@ class WebScrapper:
 
         return soup
     
+    def save_html(self, soup:BeautifulSoup, file_name: str) -> None:
 
+        script_directory = os.path.dirname(os.path.abspath(__file__)) # the __file__ variable is a built-in Python variable that holds the path to the current script file.
+        file_path = os.path.join(script_directory, 'scraped-html-pages', file_name)
 
+        with open(file_path, "w", encoding="utf-8") as file:
+            file.write(soup.prettify())
+        print(f"HTML saved in {file_name} file")
 
 
 
