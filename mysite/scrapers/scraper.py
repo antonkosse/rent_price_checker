@@ -3,7 +3,7 @@ import requests
 import os
 from urllib.parse import urlparse
 
-def html_page_scraping(website_url):
+def html_page_scraping(website_url:str) -> None:
     url = website_url
     headers = {
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0'
@@ -40,7 +40,3 @@ def html_page_scraping(website_url):
 
     else:
         print(f"Error. Status code: {page.status_code}")
-
-html_page_scraping("https://rieltor.ua")
-
-html_page_scraping("https://dom.ria.com/uk/")
