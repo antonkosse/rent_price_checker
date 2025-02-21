@@ -53,6 +53,25 @@ class WebScrapper:
             file.write(soup.prettify())
         print(f"HTML saved in {file_name} file")
 
+    def scrape(self) -> None:
+
+        response = self.get_page()
+
+        if response:
+            soup = BeautifulSoup(response.text, "html.parser")
+            cleaned_soup = self.clean_html(soup)
+        
+            parsed_url = urlparse(self.website_url)
+            site_name = parsed_url.netloc.replace('.', '-')
+            file_name = f"{site_name}.html"
+
+            self.save_html(cleaned_soup, file_name)
+        else:
+            print("Failed to retrieve the page")
+
+
+
+
 
 
 # def html_page_scraping(website_url:str) -> None:
