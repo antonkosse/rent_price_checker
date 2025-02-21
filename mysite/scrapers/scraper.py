@@ -68,7 +68,3 @@ class WebScraper:
             self.save_html(cleaned_soup, file_name)
         else:
             print("Failed to retrieve the page")
-
-scraper = WebScraper("https://dom.ria.com/uk/", remove_styles=["display:;"])
-scraper.scrape()
-
