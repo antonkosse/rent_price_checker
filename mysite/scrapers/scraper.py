@@ -24,6 +24,14 @@ class WebScrapper:
         except Exception as err:
             print(f"Other error occcured: {err}")
             return None
+    
+    def clean_html(self, soup:BeautifulSoup) -> BeautifulSoup:
+        """ Deleating style from display"""
+        for tag in soup.find_all(style=True):
+            if "display:;" in tag["style"]:
+                del tag["style"]
+        return soup
+
 
 
 
