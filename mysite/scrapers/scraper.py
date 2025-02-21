@@ -3,6 +3,17 @@ import requests
 import os
 from urllib.parse import urlparse
 
+class WebScrapper:
+
+    def __init__(self, website_url:str):
+        self.website_utl = website_url
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0'
+        }
+        self.page = self.get_page()
+    
+
+
 def html_page_scraping(website_url:str) -> None:
     url = website_url
     headers = {
