@@ -6,13 +6,14 @@ from typing import Optional
 
 class WebScrapper:
 
-    def __init__(self, website_url:str):
+    def __init__(self, website_url:str, headers: dict = None, remove_tags=None, remove_styles=None):
         self.website_url = website_url
         self.headers = {
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0'
         }
-        self.page = self.get_page()
-    
+        self.remove_tags = remove_tags or ["script", "style"]
+        self.remove_styles = remove_styles
+        
     def get_page(self) -> Optional[requests.Response]:
         try:
             response = requests.get(self.website_url, headers=self.headers)
@@ -26,11 +27,18 @@ class WebScrapper:
             return None
     
     def clean_html(self, soup:BeautifulSoup) -> BeautifulSoup:
-        """ Deleating style from display"""
-        for tag in soup.find_all(style=True):
-            if "display:;" in tag["style"]:
-                del tag["style"]
+        """Clean up HTML by removing unnecessary tags or styles"""
+        for tag in soup.find_all(self.remove_tags):
+            tag.decompose()
+
+        if self.remove_styles:
+            for tag in soup.find_all(style=True):
+                for style in self.remove_styles:
+                    if style in tag["style"]:
+                        del tag["style"]
+
         return soup
+    
 
 
 
