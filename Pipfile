@@ -8,6 +8,7 @@ flask = "*"
 pytest = "*"
 requests = "*"
 beautifulsoup4 = "*"
+sqlalchemy = "*"
 
 [dev-packages]
 flake8 = "*"
