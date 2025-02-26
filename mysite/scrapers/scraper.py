@@ -30,30 +30,15 @@ class WebScraper:
     def extract_data(self, soup: BeautifulSoup) -> Dict[str, Optional[str]]:
         raise NotImplementedError("Method extract_data() should be imlemented in child class")
     
-    def save_html(self, soup:BeautifulSoup, file_name: str) -> None:
-
-        script_directory = os.path.dirname(os.path.abspath(__file__)) # the __file__ variable is a built-in Python variable that holds the path to the current script file.
-        file_path = os.path.join(script_directory, 'scraped-html-pages', file_name)
-
-        with open(file_path, "w", encoding="utf-8") as file:
-            file.write(soup.prettify())
-        print(f"HTML saved in {file_name} file")
 
     def scrape(self) -> None:
 
         response = self.get_page()
 
         if response:
-            soup = BeautifulSoup(response.text, "html.parser")
-            cleaned_soup = self.clean_html(soup)
-        
-            parsed_url = urlparse(self.website_url)
-            site_name = parsed_url.netloc.replace('.', '-')
-            file_name = f"{site_name}.html"
-
-            self.save_html(cleaned_soup, file_name)
+            return self.extract_data(response)
         else:
-            print("Failed to retrieve the page")
+            return {"url": self.website_url, "price": None, "availability": None}
 
 
 class DomRiaScraper(WebScraper):
