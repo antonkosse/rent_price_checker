@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 import requests
 import os
 from urllib.parse import urlparse
-from typing import Optional
+from typing import Dict, Optional
 
 class WebScraper:
 
@@ -36,15 +36,39 @@ class WebScraper:
         response = self.get_page()
 
         if response:
-            return self.extract_data(response)
+            soup = BeautifulSoup(response.text, "html.parser")
+            return self.extract_data(soup)
         else:
             return {"url": self.website_url, "price": None, "availability": None}
 
 
-class DomRiaScraper(WebScraper):
-    None
-
-
 class RieltorScraper(WebScraper):
-    None
 
+    def extract_data(self, soup: BeautifulSoup) -> Dict[str, Optional[str]]:
+
+        price_tag = soup.find("div",  class_="offer-view-price-title")
+        price = price_tag.text.strip() if price_tag else None
+        return {
+            "url": self.website_url,
+            "price": price
+        }
+
+
+class DomRiaScraper(WebScraper):
+
+    def extract_data(self, soup: BeautifulSoup) -> Dict[str, Optional[str]]:
+
+        price_tag = soup.find("b", class_="size30")
+        price = price_tag.text.strip() if price_tag else None
+        return {
+            "url": self.website_url,
+            "price": price
+        }
+
+scraper1 = DomRiaScraper("https://dom.ria.com/uk/realty-dolgosrochnaya-arenda-kvartira-kiev-mihaila-boychuka-ulitsa-30412680.html")
+data1 = scraper1.scrape()
+print(data1)
+
+scraper2 = RieltorScraper("https://rieltor.ua/flats-rent/view/11739553/")
+data2 = scraper2.scrape()
+print(data2)
