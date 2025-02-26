@@ -27,6 +27,8 @@ class WebScraper:
             print(f"Other error occcured: {err}")
             return None
     
+    def extract_data(self, soup: BeautifulSoup) -> Dict[str, Optional[str]]:
+        raise NotImplementedError("Method extract_data() should be imlemented in child class")
     
     def save_html(self, soup:BeautifulSoup, file_name: str) -> None:
 
