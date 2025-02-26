@@ -13,9 +13,7 @@ class WebScraper:
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0'
         }
 
-        self.remove_tags = remove_tags or ["style"]
-        self.remove_styles = remove_styles
-        
+ 
     def get_page(self) -> Optional[requests.Response]:
 
         try:
@@ -29,20 +27,6 @@ class WebScraper:
             print(f"Other error occcured: {err}")
             return None
     
-    def clean_html(self, soup:BeautifulSoup) -> BeautifulSoup:
-
-        """Clean up HTML by removing unnecessary tags or styles"""
-
-        for tag in soup.find_all(self.remove_tags):
-            tag.decompose()
-
-        if self.remove_styles:
-            for tag in soup.find_all(style=True):
-                for style in self.remove_styles:
-                    if style in tag["style"]:
-                        del tag["style"]
-
-        return soup
     
     def save_html(self, soup:BeautifulSoup, file_name: str) -> None:
 
@@ -68,3 +52,12 @@ class WebScraper:
             self.save_html(cleaned_soup, file_name)
         else:
             print("Failed to retrieve the page")
+
+
+class DomRiaScraper(WebScraper):
+    None
+
+
+class RieltorScraper(WebScraper):
+    None
+
