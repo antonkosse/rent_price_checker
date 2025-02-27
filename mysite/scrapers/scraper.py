@@ -3,6 +3,8 @@ import requests
 import os
 from urllib.parse import urlparse
 from typing import Dict, Optional
+import re
+
 
 class WebScraper:
 
@@ -59,12 +61,12 @@ class RieltorScraper(WebScraper):
     def extract_data(self, soup: BeautifulSoup) -> Dict[str, Optional[str]]:
 
         price_tag = soup.find("div",  class_="offer-view-price-title")
-        price = price_tag.text.strip() if price_tag else None
+        raw_price = price_tag.text.strip() if price_tag else None
+        normalized_price = self.normalize_price(raw_price)
         return {
             "url": self.website_url,
-            "price": price
+            "price": normalized_price
         }
-
 
 class DomRiaScraper(WebScraper):
 
