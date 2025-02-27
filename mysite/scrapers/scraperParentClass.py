@@ -2,8 +2,6 @@ from bs4 import BeautifulSoup
 import requests
 from typing import Dict, Optional
 import re
-import sqlite3
-
 
 class WebScraper:
 
@@ -58,49 +56,13 @@ class WebScraper:
             return {"url": self.website_url, "price": None, "availability": None}
 
 
-class RieltorScraper(WebScraper):
-
-    def extract_data(self, soup: BeautifulSoup) -> Dict[str, Optional[str]]:
-
-        deleted_block = soup.find("div", class_ = "offer-view-404")
-
-        if deleted_block: 
-            availability = "deleted"
-            normalized_price = None
-        else:
-            availability = "available"
-            price_tag = soup.find("div",  class_="offer-view-price-title")
-            raw_price = price_tag.text.strip() if price_tag else None
-            normalized_price = self.normalize_price(raw_price)
-        return {
-            "url": self.website_url,
-            "price": normalized_price,
-            "availability": availability
-        }
-
-class DomRiaScraper(WebScraper):
-
-    def extract_data(self, soup: BeautifulSoup) -> Dict[str, Optional[str]]:
-        deleted_tag = soup.find("span", class_="size24 bold")
-        if deleted_tag and "видалено" in deleted_tag.text.lower():
-            availability = "deleted"
-            normalized_price = None
-        else:
-            availability = "available"
-            price_tag = soup.find("b", class_="size30")
-            raw_price = price_tag.text.strip() if price_tag else None
-            normalized_price = self.normalize_price(raw_price)
-        return {
-            "url": self.website_url,
-            "price": normalized_price,
-            "availability": availability
-        }
 
 
-scraper1 = DomRiaScraper("https://dom.ria.com/uk/realty-dolgosrochnaya-arenda-kvartira-kiev-otradnyy-lyubomira-guzara-prospekt-32371358.html")
-data1 = scraper1.scrape()
-print(data1)
 
-scraper2 = RieltorScraper("https://rieltor.ua/flats-rent/view/11717289/")
-data2 = scraper2.scrape()
-print(data2) 
+# scraper1 = DomRiaScraper("https://dom.ria.com/uk/realty-dolgosrochnaya-arenda-kvartira-kiev-otradnyy-lyubomira-guzara-prospekt-32371358.html")
+# data1 = scraper1.scrape()
+# print(data1)
+
+# scraper2 = RieltorScraper("https://rieltor.ua/flats-rent/view/11717289/")
+# data2 = scraper2.scrape()
+# print(data2) 
