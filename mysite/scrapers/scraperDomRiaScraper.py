@@ -1,4 +1,7 @@
 from scraperParentClass import WebScraper
+from bs4 import BeautifulSoup
+import requests
+from typing import Dict, Optional
 
 class DomRiaScraper(WebScraper):
 
