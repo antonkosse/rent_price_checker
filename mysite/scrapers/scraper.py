@@ -107,22 +107,40 @@ class DatabaseManager:
 
         conn = sqlite3.connect(self.db_name)
         cursor = conn.cursor()
-        cursor.execute("""
-            INSERT OR REPLACE INTO listings (url, price) VALUES (?, ?)
-        """, (url, price))
+        cursor.execute("SELECT id FROM listings WHERE url = ?", (url,))
+        existing_record = cursor.fetchone()
+
+        if existing_record:
+            cursor.execute("UPDATE listings SET price = ? WHERE url = ?", (price, url))
+        else:
+            cursor.execute("INSERT INTO listings (url, price) VALUES (?, ?)", (url, price))
+
 
         conn.commit()
         conn.close()
     
-    
 
 
+if __name__ == "__main__":
+    db_manager = DatabaseManager()
+
+    listings = [
+        DomRiaScraper("https://dom.ria.com/uk/realty-dolgosrochnaya-arenda-kvartira-kiev-mihaila-boychuka-ulitsa-30412680.html"),
+        RieltorScraper("https://rieltor.ua/flats-rent/view/11739553/")
+    ]
+
+    for scraper in listings:
+        data = scraper.scrape()
+        print(f"Зібрано: {data}")
+        db_manager.save_to_db(data["url"], data["price"])
 
 
-scraper1 = DomRiaScraper("https://dom.ria.com/uk/realty-dolgosrochnaya-arenda-kvartira-kiev-mihaila-boychuka-ulitsa-30412680.html")
-data1 = scraper1.scrape()
-print(data1)
+conn = sqlite3.connect("real_estate.db")
+cursor = conn.cursor()
 
-scraper2 = RieltorScraper("https://rieltor.ua/flats-rent/view/11739553/")
-data2 = scraper2.scrape()
-print(data2)
+cursor.execute("SELECT * FROM listings")
+rows = cursor.fetchall()
+
+for row in rows:
+    print(row)
+conn.close()
