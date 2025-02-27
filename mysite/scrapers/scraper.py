@@ -22,8 +22,8 @@ class WebScraper:
             response.raise_for_status()
             return response
         except requests.exceptions.HTTPError as err:
-            print(f"HTTP error occcured: {err}")
-            return None
+            if err.response is not None and err.response.status_code == 410:
+                return err.response
         except Exception as err:
             print(f"Other error occcured: {err}")
             return None
@@ -47,6 +47,9 @@ class WebScraper:
     def scrape(self) -> None:
 
         response = self.get_page()
+
+        if response.status_code == 410:
+                return {"url": self.website_url, "price": None, "availability": "deleted"}
 
         if response:
             soup = BeautifulSoup(response.text, "html.parser")
@@ -78,21 +81,26 @@ class RieltorScraper(WebScraper):
 class DomRiaScraper(WebScraper):
 
     def extract_data(self, soup: BeautifulSoup) -> Dict[str, Optional[str]]:
-
-        price_tag = soup.find("b", class_="size30")
-        raw_price = price_tag.text.strip() if price_tag else None
-        normalized_price = self.normalize_price(raw_price)
+        deleted_tag = soup.find("span", class_="size24 bold")
+        if deleted_tag and "видалено" in deleted_tag.text.lower():
+            availability = "deleted"
+            normalized_price = None
+        else:
+            availability = "available"
+            price_tag = soup.find("b", class_="size30")
+            raw_price = price_tag.text.strip() if price_tag else None
+            normalized_price = self.normalize_price(raw_price)
         return {
             "url": self.website_url,
-            "price": normalized_price 
-            # here should be availability but I need an example page in this case
+            "price": normalized_price,
+            "availability": availability
         }
 
 
-scraper1 = DomRiaScraper("https://dom.ria.com/uk/realty-dolgosrochnaya-arenda-kvartira-kiev-mihaila-boychuka-ulitsa-30412680.html")
+scraper1 = DomRiaScraper("https://dom.ria.com/uk/realty-dolgosrochnaya-arenda-kvartira-kiev-otradnyy-lyubomira-guzara-prospekt-32371358.html")
 data1 = scraper1.scrape()
 print(data1)
 
-scraper2 = RieltorScraper("https://rieltor.ua/flats-rent/view/11739553/")
+scraper2 = RieltorScraper("https://rieltor.ua/flats-rent/view/11717289/")
 data2 = scraper2.scrape()
 print(data2) 
