@@ -29,6 +29,18 @@ class WebScraper:
     
     def extract_data(self, soup: BeautifulSoup) -> Dict[str, Optional[str]]:
         raise NotImplementedError("Method extract_data() should be imlemented in child class")
+
+    
+    def normalize_price(self, price: Optional[str]) -> Optional[str]:
+
+        if not price:
+            return {"amount": None, "currency": None}
+        
+        price = price.replace("\xa0", " ")
+        currency = "грн" if "грн" in price else "$" if "$" in price else ""
+        amount = re.sub(r"[^\d]", "", price)
+
+        return f"{amount} {currency}".strip()
     
 
     def scrape(self) -> None:
@@ -59,10 +71,11 @@ class DomRiaScraper(WebScraper):
     def extract_data(self, soup: BeautifulSoup) -> Dict[str, Optional[str]]:
 
         price_tag = soup.find("b", class_="size30")
-        price = price_tag.text.strip() if price_tag else None
+        raw_price = price_tag.text.strip() if price_tag else None
+        normalized_price = self.normalize_price(raw_price)
         return {
             "url": self.website_url,
-            "price": price
+            "price": normalized_price
         }
 
 scraper1 = DomRiaScraper("https://dom.ria.com/uk/realty-dolgosrochnaya-arenda-kvartira-kiev-mihaila-boychuka-ulitsa-30412680.html")
