@@ -62,7 +62,6 @@ erDiagram
         int listing_id FK
         text error_message
         timestamp occurred_at
-        boolean resolved
     }
 
     listings ||--o{ price_history : "tracks_prices"
