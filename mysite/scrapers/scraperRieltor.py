@@ -3,16 +3,18 @@ from bs4 import BeautifulSoup
 import requests
 from typing import Dict, Optional
 
-class DomRiaScraper(WebScraper):
+class RieltorScraper(WebScraper):
 
     def extract_data(self, soup: BeautifulSoup) -> Dict[str, Optional[str]]:
-        deleted_tag = soup.find("span", class_="size24 bold")
-        if deleted_tag and "видалено" in deleted_tag.text.lower():
+
+        deleted_block = soup.find("div", class_ = "offer-view-404")
+
+        if deleted_block: 
             availability = "deleted"
             normalized_price = None
         else:
             availability = "available"
-            price_tag = soup.find("b", class_="size30")
+            price_tag = soup.find("div",  class_="offer-view-price-title")
             raw_price = price_tag.text.strip() if price_tag else None
             normalized_price = self.normalize_price(raw_price)
         return {
