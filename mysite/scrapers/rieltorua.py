@@ -1,7 +1,10 @@
 import re
 import datetime
-from typing import Dict
+
+import mysql.connector
+from typing import Dict, Optional, Tuple, List
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse
 
 from mysite.scrapers.scraperParentClass import WebScraper
 from mysite.service.databasehandler import DatabaseHandler
