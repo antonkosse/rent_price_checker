@@ -1,9 +1,8 @@
 from bs4 import BeautifulSoup
 import requests
-import os
-from urllib.parse import urlparse
 from typing import Dict, Optional
 import re
+import sqlite3
 
 
 class WebScraper:
@@ -77,8 +76,48 @@ class DomRiaScraper(WebScraper):
         normalized_price = self.normalize_price(raw_price)
         return {
             "url": self.website_url,
-            "price": normalized_price
+            "price": normalized_price 
+            # here should be availability but I need an example page in this case
         }
+
+
+class DatabaseManager:
+    """Class for db management"""
+
+    def __init__(self, db_name ="real_estate.db"):
+        self.db_name = db_name
+        self.create_db()
+
+    def create_db(self):
+
+        conn = sqlite3.connect(self.db_name)
+        cursor = conn.cursor()
+        cursor.execute("""
+             CREATE TABLE IF NOT EXISTS listings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                url TEXT UNIQUE,
+                price TEXT
+            )
+        """)
+
+        conn.commit()
+        conn.close()
+
+    def save_to_db(self, url: str, price: Optional[str]):
+
+        conn = sqlite3.connect(self.db_name)
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT OR REPLACE INTO listings (url, price) VALUES (?, ?)
+        """, (url, price))
+
+        conn.commit()
+        conn.close()
+    
+    
+
+
+
 
 scraper1 = DomRiaScraper("https://dom.ria.com/uk/realty-dolgosrochnaya-arenda-kvartira-kiev-mihaila-boychuka-ulitsa-30412680.html")
 data1 = scraper1.scrape()
