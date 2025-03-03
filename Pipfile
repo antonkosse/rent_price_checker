@@ -8,6 +8,8 @@ flask = "*"
 pytest = "*"
 requests = "*"
 beautifulsoup4 = "*"
+mysql-connector-python = ">=8.0.0"
+schedule = ">=1.1.0"
 
 [dev-packages]
 flake8 = "*"
