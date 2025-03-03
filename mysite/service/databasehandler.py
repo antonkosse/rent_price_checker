@@ -1,8 +1,6 @@
-import re
 import datetime
 import mysql.connector
 from typing import Dict, Optional, Tuple
-from urllib.parse import urlparse
 
 class DatabaseHandler:
     """

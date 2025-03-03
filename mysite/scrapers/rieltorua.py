@@ -1,13 +1,10 @@
 import re
 import datetime
-import mysql.connector
-from typing import Dict, Optional, Tuple, List
+from typing import Dict
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse
 
-from mysite.scrapers.scraper import WebScraper
+from mysite.scrapers.scraperParentClass import WebScraper
 from mysite.service.databasehandler import DatabaseHandler
-
 
 class RieltorScraper(WebScraper):
     """
