@@ -78,7 +78,8 @@ class DomRiaScraper(WebScraper):
 
         print(property_details)
 
-        
+
+
 if __name__ == '__main__':
     scraper1 = DomRiaScraper("https://dom.ria.com/uk/realty-dolgosrochnaya-arenda-kvartira-kiev-dvrz-alma-atinskaya-ulitsa-32739287.html")
     scraper1.scrape_property_details()
