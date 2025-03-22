@@ -3,8 +3,9 @@ import datetime
 from typing import Dict
 from bs4 import BeautifulSoup
 
-from mysite.scrapers.scraperParentClass import WebScraper
-from mysite.service.databasehandler import DatabaseHandler
+from scrapers.scraperParentClass import WebScraper
+from service.databasehandler import DatabaseHandler
+
 
 class RieltorScraper(WebScraper):
     """
@@ -95,8 +96,28 @@ class RieltorScraper(WebScraper):
                         except ValueError:
                             pass
 
+        property_details['title'] = generate_title_from_attributes(property_details)
         return property_details
 
+def generate_title_from_attributes(property_details: Dict) -> str:
+    # Start with the number of rooms if available
+    title_parts = []
+
+    if property_details.get('number_of_rooms'):
+        title_parts.append(f"{property_details['number_of_rooms']}-room")
+
+    # Add property type (always add 'apartment' or similar term)
+    title_parts.append("apartment")
+
+    # Add area if available
+    if property_details.get('total_area'):
+        title_parts.append(f"of {property_details['total_area']} m²")
+
+    # Add floor if available
+    if property_details.get('floor'):
+        title_parts.append(f"on floor {property_details['floor']}")
+
+    return " ".join(title_parts)
 
 def scrape_and_update_listing(url: str, db_config: Dict = None) -> bool:
     """

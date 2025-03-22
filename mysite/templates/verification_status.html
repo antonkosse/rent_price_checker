@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification Status</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            background-color: #f9f9f9;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(0,0,0,0.2);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status-container {
+            margin: 20px 0;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .status-pending {
+            color: #3498db;
+        }
+
+        .status-success {
+            color: #2ecc71;
+        }
+
+        .status-error {
+            color: #e74c3c;
+        }
+
+        .button-container {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        .button.primary {
+            background-color: #2ecc71;
+        }
+
+        .button.danger {
+            background-color: #e74c3c;
+        }
+
+        .button:hover {
+            opacity: 0.9;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Email Verification Status</h1>
+
+    <div class="card">
+        <div class="status-container">
+            <div id="status-spinner" class="spinner"></div>
+            <span id="status-message" class="status-pending">Sending verification email to your address...</span>
+        </div>
+
+        <div class="button-container">
+            <a id="continue-button" href="{{ url_for('dashboard') }}" class="button primary hidden">
+                Continue to Dashboard
+            </a>
+
+            <a id="retry-button" href="{{ url_for('verify_email') }}" class="button danger hidden">
+                Try Again
+            </a>
+
+            <a id="home-button" href="{{ url_for('index') }}" class="button">
+                Back to Home
+            </a>
+        </div>
+    </div>
+
+    <input type="hidden" id="verification-id" value="{{ verification_id }}">
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const verificationId = document.getElementById('verification-id').value;
+            const statusSpinner = document.getElementById('status-spinner');
+            const statusMessage = document.getElementById('status-message');
+            const continueButton = document.getElementById('continue-button');
+            const retryButton = document.getElementById('retry-button');
+
+            // Start polling for status updates
+            const pollInterval = setInterval(checkStatus, 2000); // Check every 2 seconds
+
+            // Set a timeout to stop polling after 30 seconds
+            setTimeout(function() {
+                clearInterval(pollInterval);
+                // If we're still pending after 30 seconds, show a timeout message
+                if (statusMessage.classList.contains('status-pending')) {
+                    statusSpinner.style.display = 'none';
+                    statusMessage.textContent = 'Email is taking longer than expected. Please check your inbox or try again.';
+                    retryButton.classList.remove('hidden');
+                }
+            }, 30000);
+
+            function checkStatus() {
+                fetch(`/api/verification_status/${verificationId}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        statusMessage.textContent = data.message;
+
+                        if (data.status === 'success') {
+                            // Email sent successfully
+                            clearInterval(pollInterval);
+                            statusSpinner.style.display = 'none';
+                            statusMessage.classList.remove('status-pending');
+                            statusMessage.classList.add('status-success');
+                            continueButton.classList.remove('hidden');
+                        } else if (data.status === 'error') {
+                            // Error sending email
+                            clearInterval(pollInterval);
+                            statusSpinner.style.display = 'none';
+                            statusMessage.classList.remove('status-pending');
+                            statusMessage.classList.add('status-error');
+                            retryButton.classList.remove('hidden');
+                        }
+                        // If still pending, keep polling
+                    })
+                    .catch(error => {
+                        console.error('Error checking status:', error);
+                        clearInterval(pollInterval);
+                        statusSpinner.style.display = 'none';
+                        statusMessage.textContent = 'Error checking email status. Please try again.';
+                        statusMessage.classList.remove('status-pending');
+                        statusMessage.classList.add('status-error');
+                        retryButton.classList.remove('hidden');
+                    });
+            }
+
+            // Initial check
+            checkStatus();
+        });
+    </script>
+</body>
+</html>

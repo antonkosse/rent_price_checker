@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Add New Listing - Rental Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow form-container">
+            <div class="card-body p-4">
+                <h2 class="mb-4"><i class="fas fa-plus-circle me-2"></i>Add New Listing</h2>
+
+                <form id="add-listing-form" action="{{ url_for('add_listing') }}" method="post">
+                    <div class="mb-4">
+                        <label for="listing-url" class="form-label">Property Listing URL</label>
+                        <input type="url" id="listing-url" name="url" class="form-control form-control-lg"
+                               placeholder="https://rieltor.ua/flats-rent/view/123456/" required>
+                        <div class="form-text">
+                            Enter a full URL from rieltor.ua or dom.ria.com
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-bell me-2"></i>Notification Settings</h5>
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" id="notify-price" name="notify_price" checked>
+                                    <label class="form-check-label" for="notify-price">
+                                        Notify me when price changes
+                                    </label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="notify-availability" name="notify_availability" checked>
+                                    <label class="form-check-label" for="notify-availability">
+                                        Notify me when availability changes
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-plus me-2"></i>Add Listing
+                        </button>
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-question-circle me-2"></i>How to Add a Listing</h5>
+                <ol class="mb-0">
+                    <li class="mb-2">Visit <a href="https://rieltor.ua" target="_blank">rieltor.ua</a> or <a href="https://dom.ria.com" target="_blank">dom.ria.com</a></li>
+                    <li class="mb-2">Search for rental properties you're interested in</li>
+                    <li class="mb-2">Open the listing page for a specific property</li>
+                    <li class="mb-2">Copy the full URL from your browser's address bar</li>
+                    <li>Paste the URL in the form above and click "Add Listing"</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-body">
+                <h5 class="card-title"><i class="fas fa-exclamation-triangle me-2 text-warning"></i>Important Notes</h5>
+                <ul class="mb-0">
+                    <li class="mb-2">Only URLs from rieltor.ua and dom.ria.com are supported</li>
+                    <li class="mb-2">Make sure to use the direct property listing URL, not a search results page</li>
+                    <li>Properties are checked every 12 hours for changes</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

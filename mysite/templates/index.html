@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Rental Tracker - Track Ukrainian Property Listings{% endblock %}
+
+{% block content %}
+<div class="row align-items-center">
+    <div class="col-md-6">
+        <div class="p-4">
+            <h1 class="display-4 fw-bold mb-4">Track Rental Properties in Ukraine</h1>
+            <p class="lead mb-4">Monitor price changes and availability of rental listings from rieltor.ua and dom.ria. Get notified when prices drop or properties become available.</p>
+            
+            {% if not session.get('verified_email') %}
+                <div class="card form-container">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Get Started</h5>
+                        <form action="{{ url_for('verify_email') }}" method="post">
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Enter your email to start tracking properties</label>
+                                <input type="email" name="email" id="email" class="form-control form-control-lg" placeholder="your@email.com" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg w-100">
+                                <i class="fas fa-envelope me-2"></i>Verify Email
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <div class="d-grid gap-3">
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-home me-2"></i>Go to My Dashboard
+                    </a>
+                    <a href="{{ url_for('add_listing') }}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-plus-circle me-2"></i>Add New Listing
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="p-4">
+            <div class="card shadow-lg">
+                <div class="card-body p-4">
+                    <h4 class="mb-4 text-center">How It Works</h4>
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-primary text-white rounded-circle p-3 me-3">
+                            <i class="fas fa-link fa-2x"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1">Add Property Links</h5>
+                            <p class="mb-0 text-muted">Paste URLs from rieltor.ua or dom.ria</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-primary text-white rounded-circle p-3 me-3">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1">Track Price Changes</h5>
+                            <p class="mb-0 text-muted">Monitor price trends over time</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="bg-primary text-white rounded-circle p-3 me-3">
+                            <i class="fas fa-bell fa-2x"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1">Get Notifications</h5>
+                            <p class="mb-0 text-muted">Receive alerts for price drops or availability changes</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary text-white rounded-circle p-3 me-3">
+                            <i class="fas fa-laptop fa-2x"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1">Simple Dashboard</h5>
+                            <p class="mb-0 text-muted">Manage all your tracked properties in one place</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="card bg-light border-0">
+            <div class="card-body p-4">
+                <h3 class="text-center mb-4">Supported Property Websites</h3>
+                <div class="row justify-content-center text-center">
+                    <div class="col-md-5">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <img src="https://rieltor.ua/static/img/logo.svg" alt="Rieltor.ua" style="height: 50px;" class="mb-3">
+                                <p>Ukraine's largest property listing website with thousands of rental options</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <img src="https://dom.ria.com/images/logo.svg" alt="DOM.RIA" style="height: 50px;" class="mb-3">
+                                <p>Leading real estate marketplace with comprehensive property listings</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

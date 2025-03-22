@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ listing.title }} - Rental Tracker{% endblock %}
+
+{% block head_extras %}
+<!-- Chart.js for price history graph -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{{ url_for('dashboard') }}" class="text-decoration-none">
+        <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card listing-detail mb-4">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <h2 class="mb-0">{{ listing.title }}</h2>
+                    <span class="badge {% if listing.is_available %}bg-success{% else %}bg-danger{% endif %} p-2">
+                        {% if listing.is_available %}Available{% else %}Unavailable{% endif %}
+                    </span>
+                </div>
+                
+                <!-- Placeholder image - in a real app, this would be the actual property image -->
+                <div class="bg-light rounded listing-image d-flex align-items-center justify-content-center">
+                    <div class="text-center">
+                        <i class="fas fa-home fa-4x text-muted mb-2"></i>
+                        <p class="mb-0 text-muted">No image available</p>
+                    </div>
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <h3>₴ {{ listing.price }}</h3>
+                        <p class="text-muted">
+                            Tracked since {{ listing.created_at.strftime('%d %b, %Y') }}
+                        </p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <a href="{{ listing.url }}" target="_blank" class="btn btn-outline-primary">
+                            <i class="fas fa-external-link-alt me-1"></i>View Original Listing
+                        </a>
+                    </div>
+                </div>
+                
+                <h4>Property Details</h4>
+                <dl class="row listing-info">
+                    <dt class="col-sm-3">Location</dt>
+                    <dd class="col-sm-9">{{ listing.location or 'Not specified' }}</dd>
+                    
+                    <dt class="col-sm-3">Rooms</dt>
+                    <dd class="col-sm-9">{{ listing.rooms or 'Not specified' }}</dd>
+                    
+                    <dt class="col-sm-3">Total Area</dt>
+                    <dd class="col-sm-9">{% if listing.area %}{{ listing.area }} m²{% else %}Not specified{% endif %}</dd>
+                    
+                    <dt class="col-sm-3">Floor</dt>
+                    <dd class="col-sm-9">{{ listing.floor or 'Not specified' }}</dd>
+                    
+                    <dt class="col-sm-3">Source</dt>
+                    <dd class="col-sm-9">{{ listing.source_website }}</dd>
+                    
+                    <dt class="col-sm-3">Last Checked</dt>
+                    <dd class="col-sm-9">{{ listing.last_checked.strftime('%d %b, %Y at %H:%M') }}</dd>
+                </dl>
+                
+                {% if listing.description %}
+                    <h4>Description</h4>
+                    <div class="listing-description mb-4">
+                        <p>{{ listing.description }}</p>
+                    </div>
+                {% endif %}
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('update_listing', listing_id=listing.id) }}" class="btn btn-primary">
+                        <i class="fas fa-sync me-1"></i>Update Now
+                    </a>
+                    <a href="{{ url_for('remove_from_watchlist', listing_id=listing.id) }}" 
+                       class="btn btn-outline-danger"
+                       onclick="return confirm('Are you sure you want to remove this listing from your watchlist?')">
+                        <i class="fas fa-trash-alt me-1"></i>Remove from Watchlist
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Price History Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Price History</h5>
+            </div>
+            <div class="card-body">
+                {% if price_history|length > 1 %}
+                    <canvas id="price-history-chart" 
+                            data-dates="{{ price_history|map(attribute='date')|map('strftime', '%d %b')|list|tojson }}"
+                            data-prices="{{ price_history|map(attribute='price')|list|tojson }}">
+                    </canvas>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                        <p>Not enough price data to show history yet.</p>
+                        <p class="small text-muted">We'll track price changes as they occur.</p>
+                    </div>
+                {% endif %}
+                
+                <hr>
+                
+                <h6>Price Changes</h6>
+                {% if price_history|length > 1 %}
+                    <div class="price-history-list">
+                        {% for price in price_history %}
+                            <div class="price-history-item d-flex justify-content-between align-items-center">
+                                <span>{{ price.date.strftime('%d %b, %Y') }}</span>
+                                <span class="fw-bold">₴ {{ price.price }}</span>
+                                
+                                {% if not loop.last %}
+                                    {% set prev_price = price_history[loop.index].price %}
+                                    {% set price_diff = price.price - prev_price %}
+                                    
+                                    {% if price_diff > 0 %}
+                                        <span class="price-change-up">
+                                            <i class="fas fa-arrow-up me-1"></i>+{{ price_diff }}
+                                        </span>
+                                    {% elif price_diff < 0 %}
+                                        <span class="price-change-down">
+                                            <i class="fas fa-arrow-down me-1"></i>{{ price_diff }}
+                                        </span>
+                                    {% else %}
+                                        <span class="price-change-same">—</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">Initial</span>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted">No price changes recorded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Notification Settings Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-bell me-2"></i>Notification Settings</h5>
+            </div>
+            <div class="card-body">
+                <div class="form-check form-switch mb-3">
+                    <input class="form-check-input notification-toggle" type="checkbox" 
+                           id="notify-price-change" checked
+                           data-listing-id="{{ listing.id }}"
+                           data-notification-type="price">
+                    <label class="form-check-label" for="notify-price-change">
+                        Notify me when price changes
+                    </label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input notification-toggle" type="checkbox" 
+                           id="notify-availability-change" checked
+                           data-listing-id="{{ listing.id }}"
+                           data-notification-type="availability">
+                    <label class="form-check-label" for="notify-availability-change">
+                        Notify me when availability changes
+                    </label>
+                </div>
+                
+                <hr>
+                
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-envelope text-muted me-2"></i>
+                    <span>Notifications sent to: <strong>{{ session.get('verified_email') }}</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast for notifications -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="notification-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <i class="fas fa-bell me-2 text-primary"></i>
+            <strong class="me-auto">Notification</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toast-message">
+            Notification settings updated
+        </div>
+    </div>
+</div>
+{% endblock %}
