@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}Email Verification - Rental Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-envelope me-2"></i>Email Verification</h4>
+            </div>
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <div class="display-1 text-primary">
+                        <i class="fas fa-envelope-open-text"></i>
+                    </div>
+                    <h2 class="mt-3">Almost there!</h2>
+                </div>
+                
+                <div class="alert alert-info">
+                    <p class="mb-0">We've created a verification link for <strong>{{ email }}</strong></p>
+                </div>
+                
+                <p>In a real-world application, we would send this link to your email address. For demonstration purposes, you can use the link below:</p>
+                
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="verification-link" value="{{ verification_url }}" readonly>
+                    <button class="btn btn-primary" type="button" id="copy-btn" onclick="copyToClipboard('verification-link')">
+                        <i class="fas fa-copy"></i> Copy Link
+                    </button>
+                </div>
+                
+                <div class="mt-4">
+                    <a href="{{ verification_url }}" class="btn btn-success w-100">
+                        <i class="fas fa-check-circle me-2"></i>Verify My Email Now
+                    </a>
+                </div>
+                
+                <hr class="my-4">
+                
+                <div class="text-center text-muted">
+                    <p class="small mb-0">This link will expire in 24 hours</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('index') }}" class="text-decoration-none">
+                <i class="fas fa-arrow-left me-1"></i> Return to Home Page
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Focus and select the verification link for easy copying
+    document.addEventListener('DOMContentLoaded', function() {
+        const verificationLink = document.getElementById('verification-link');
+        verificationLink.focus();
+        verificationLink.select();
+    });
+</script>
+{% endblock %}

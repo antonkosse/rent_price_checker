@@ -2,7 +2,8 @@
 import re
 import datetime
 import mysql.connector
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Any, List
+
 
 class DatabaseHandler:
     """
@@ -19,6 +20,15 @@ class DatabaseHandler:
         }
 
     def connect(self):
+        """Establishes a connection to the MySQL database."""
+        try:
+            connection = mysql.connector.connect(**self.config)
+            return connection
+        except mysql.connector.Error as err:
+            print(f"Error connecting to MySQL database: {err}")
+            return None
+
+    def __get_connection(self):
         """Establishes a connection to the MySQL database."""
         try:
             connection = mysql.connector.connect(**self.config)
@@ -249,3 +259,226 @@ class DatabaseHandler:
             if connection.is_connected():
                 cursor.close()
                 connection.close()
+
+    def create_verification_token(
+            self,
+            email: str,
+            token: str,
+            expiration_datetime: datetime,
+            status: str = "pending"
+    ) -> int:
+        """
+        Store a new verification token in the database with status
+
+        Args:
+            email: User's email address
+            token: Randomly generated verification token
+            expiration_datetime: When this token should expire
+            status: Initial status (default: pending)
+
+        Returns:
+            int: ID of the created token record or 0 on failure
+        """
+        query: str = """
+        INSERT INTO EMAIL_VERIFICATION_TOKENS 
+        (EMAIL, TOKEN, EXPIRES_AT, STATUS) 
+        VALUES (%s, %s, %s, %s)
+        """
+
+        connection = self.connect()
+        if not connection:
+            return False
+
+        try:
+            cursor = connection.cursor()
+            cursor.execute(query, (email, token, expiration_datetime, status))
+            token_id: int = cursor.lastrowid
+            connection.commit()
+            return token_id
+        except Exception as e:
+            print(f"Error creating verification token: {e}")
+            return 0
+
+    def get_verification_token(self, token: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieve token data if it exists and is valid
+
+        Args:
+            token: The verification token string
+
+        Returns:
+            Optional[Dict[str, Any]]: Token data including email and expiration,
+                                     or None if token not found
+        """
+        query = """
+        SELECT EMAIL, EXPIRES_AT, USED 
+        FROM EMAIL_VERIFICATION_TOKENS 
+        WHERE TOKEN = %s
+        """
+
+        try:
+            with self.__get_connection() as conn:
+                with conn.cursor(dictionary=True) as cursor:
+                    cursor.execute(query, (token,))
+                    result = cursor.fetchone()
+            return result
+        except Exception as e:
+            print(f"Error retrieving verification token: {e}")
+            return None
+
+    def mark_token_as_used(self, token: str) -> bool:
+        """
+        Mark a token as used after successful verification
+
+        Args:
+            token: The verification token to mark as used
+
+        Returns:
+            bool: Success or failure of the operation
+        """
+        query = """
+        UPDATE EMAIL_VERIFICATION_TOKENS 
+        SET USED = TRUE 
+        WHERE TOKEN = %s
+        """
+
+        try:
+            with self.__get_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(query, (token,))
+                conn.commit()
+            return True
+        except Exception as e:
+            print(f"Error marking token as used: {e}")
+            return False
+
+    def cleanup_expired_tokens(self) -> bool:
+        """
+        Delete tokens that have expired (can be run periodically)
+
+        Returns:
+            bool: Success or failure of the operation
+        """
+        query = """
+        DELETE FROM EMAIL_VERIFICATION_TOKENS 
+        WHERE EXPIRES_AT < NOW()
+        """
+
+        try:
+            with self.connect() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(query)
+                conn.commit()
+            return True
+        except Exception as e:
+            print(f"Error cleaning up expired tokens: {e}")
+            return False
+
+    def update_email_status(
+            self,
+            email: Optional[str] = None,
+            token: Optional[str] = None,
+            token_id: Optional[int] = None,
+            status: Optional[str] = None,
+            error_message: Optional[str] = None
+    ) -> bool:
+        """
+        Update the status of an email verification token
+
+        Args:
+            email: User's email (optional if token or token_id provided)
+            token: The verification token (optional if email or token_id provided)
+            token_id: The token record ID (optional if email or token provided)
+            status: New status value
+            error_message: Error details if status is 'failed'
+
+        Returns:
+            bool: Success or failure of the update operation
+        """
+        # Build where clause based on provided parameters
+        where_clause: str = ""
+        params: List[Any] = []
+
+        if token_id:
+            where_clause = "ID = %s"
+            params.append(token_id)
+        elif token:
+            where_clause = "TOKEN = %s"
+            params.append(token)
+        elif email:
+            # This would get the most recent token for this email
+            where_clause = "EMAIL = %s ORDER BY CREATED_AT DESC LIMIT 1"
+            params.append(email)
+        else:
+            return False  # Need at least one identifier
+
+        # Build update clause
+        update_parts: List[str] = []
+        if status:
+            update_parts.append("STATUS = %s")
+            params.append(status)
+
+        if error_message and status == 'failed':
+            update_parts.append("ERROR_MESSAGE = %s")
+            params.append(error_message)
+
+        if not update_parts:
+            return False  # Nothing to update
+
+        # Create full query
+        query: str = f"UPDATE EMAIL_VERFICATION_TOKENS SET {', '.join(update_parts)} WHERE {where_clause}"
+
+        try:
+            with self.__get_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(query, params)
+                    updated: bool = cursor.rowcount > 0
+                conn.commit()
+            return updated
+        except Exception as e:
+            print(f"Error updating email status: {e}")
+            return False
+
+    def get_verification_status(self, token_id: int) -> Optional[str]:
+        """
+        Get the current status of a verification token
+
+        Args:
+            token_id: The ID of the token record
+
+        Returns:
+            Optional[str]: Status value ('pending', 'sent', 'failed') or None if not found
+        """
+        query: str = "SELECT STATUS FROM EMAIL_VERIFICATION_TOKENS WHERE id = %s"
+
+        try:
+            with self.__get_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(query, (token_id,))
+                    result: Optional[tuple] = cursor.fetchone()
+            return result[0] if result else None
+        except Exception as e:
+            print(f"Error getting verification status: {e}")
+            return None
+
+    def get_verification_error(self, token_id: int) -> Optional[str]:
+        """
+        Get the error message for a failed verification token
+
+        Args:
+            token_id: The ID of the token record
+
+        Returns:
+            Optional[str]: Error message or None if not found
+        """
+        query: str = "SELECT ERROR_MESSAGE FROM EMAIL_VERIFICATION_TOKENS WHERE ID = %s AND STATUS = 'failed'"
+
+        try:
+            with self.__get_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(query, (token_id,))
+                    result: Optional[tuple] = cursor.fetchone()
+            return result[0] if result else None
+        except Exception as e:
+            print(f"Error getting verification error: {e}")
+            return None

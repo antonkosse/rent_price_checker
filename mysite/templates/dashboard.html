@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block title %}My Dashboard - Rental Tracker{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1><i class="fas fa-tachometer-alt me-2"></i>My Dashboard</h1>
+    <a href="{{ url_for('add_listing') }}" class="btn btn-primary">
+        <i class="fas fa-plus-circle me-2"></i>Add New Listing
+    </a>
+</div>
+
+<!-- Stats Overview -->
+<div class="row dashboard-stats">
+    <div class="col-md-3">
+        <div class="stats-item">
+            <i class="fas fa-home"></i>
+            <h3>{{ watchlist|length }}</h3>
+            <p>Tracked Listings</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-item">
+            <i class="fas fa-chart-line"></i>
+            <h3>
+                {% set price_changes = 0 %}
+                {% for item in watchlist %}
+                {% if item.price_change and item.price_change != '0' %}
+                {% set price_changes = price_changes + 1 %}
+                {% endif %}
+                {% endfor %}
+                {{ price_changes }}
+            </h3>
+            <p>Price Changes</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-item">
+            <i class="fas fa-check-circle"></i>
+            <h3>
+                {% set available_count = 0 %}
+                {% for item in watchlist %}
+                {% if item.is_available %}
+                {% set available_count = available_count + 1 %}
+                {% endif %}
+                {% endfor %}
+                {{ available_count }}
+            </h3>
+            <p>Available</p>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stats-item">
+            <i class="fas fa-sync"></i>
+            <h3>{{ (watchlist|first).last_checked.strftime('%d %b') if watchlist else 'N/A' }}</h3>
+            <p>Last Updated</p>
+        </div>
+    </div>
+</div>
+
+{% if watchlist %}
+<div class="row">
+    {% for listing in watchlist %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card h-100">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 text-truncate" title="{{ listing.description }}">
+                    {% if listing.title %}
+                    {{ listing.title }}
+                    {% else %}
+                    {% if listing.number_of_rooms and listing.total_area %}
+                    {{ listing.number_of_rooms }}-room apartment, {{ listing.total_area }} m²
+                    {% else %}
+                    {{ listing.description|truncate(60, true) }}
+                    {% endif %}
+                    {% endif %}
+                </h5>
+                <span class="badge {% if listing.is_available %}bg-success{% else %}bg-danger{% endif %}">
+                            {% if listing.is_available %}Available{% else %}Unavailable{% endif %}
+                        </span>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="text-primary mb-0">{{ listing.price }} UAH</h4>
+                    {% if listing.price_change %}
+                    {% if listing.price_change.startswith('+') %}
+                    <span class="badge badge-price-up">
+                                        <i class="fas fa-arrow-up me-1"></i>{{ listing.price_change }} UAH
+                                    </span>
+                    {% elif listing.price_change.startswith('-') %}
+                    <span class="badge badge-price-down">
+                                        <i class="fas fa-arrow-down me-1"></i>{{ listing.price_change }} UAH
+                                    </span>
+                    {% else %}
+                    <span class="badge badge-price-same">No Change</span>
+                    {% endif %}
+                    {% endif %}
+                </div>
+
+                <div class="small text-muted mb-3">
+                    Last checked: {{ listing.last_checked.strftime('%d %b, %Y at %H:%M') }}
+                </div>
+
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('listing_detail', listing_id=listing.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-info-circle me-1"></i>Details
+                    </a>
+                    <a href="{{ url_for('update_listing', listing_id=listing.id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-sync me-1"></i>Update Now
+                    </a>
+                </div>
+            </div>
+            <div class="card-footer bg-white d-flex justify-content-between">
+                <a href="{{ listing.url }}" target="_blank" class="btn btn-sm btn-link text-decoration-none">
+                    <i class="fas fa-external-link-alt me-1"></i>View Original
+                </a>
+                <a href="{{ url_for('remove_from_watchlist', listing_id=listing.id) }}"
+                   class="btn btn-sm btn-link text-danger text-decoration-none"
+                   onclick="return confirm('Are you sure you want to remove this listing from your watchlist?')">
+                    <i class="fas fa-trash-alt me-1"></i>Remove
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card">
+    <div class="card-body text-center p-5">
+        <div class="display-1 text-muted mb-4">
+            <i class="fas fa-home-alt"></i>
+        </div>
+        <h3>No Listings Yet</h3>
+        <p class="lead">Start tracking rental properties by adding your first listing</p>
+        <a href="{{ url_for('add_listing') }}" class="btn btn-primary btn-lg mt-3">
+            <i class="fas fa-plus-circle me-2"></i>Add Your First Listing
+        </a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Toast for notifications -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+    <div id="notification-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <i class="fas fa-bell me-2 text-primary"></i>
+            <strong class="me-auto">Notification</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toast-message">
+            Notification settings updated
+        </div>
+    </div>
+</div>
+{% endblock %}
