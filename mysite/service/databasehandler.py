@@ -1,3 +1,5 @@
+
+import re
 import datetime
 import mysql.connector
 from typing import Dict, Optional, Tuple

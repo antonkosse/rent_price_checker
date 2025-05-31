@@ -1,6 +1,8 @@
 import re
 import datetime
-from typing import Dict
+
+from typing import Dict, Optional, Tuple, List
+
 from bs4 import BeautifulSoup
 
 from mysite.scrapers.scraperParentClass import WebScraper
